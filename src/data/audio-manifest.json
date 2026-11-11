@@ -1,0 +1,215 @@
+{
+ "clips": {
+  "welcome": {
+   "src": "/audio/announcements/welcome.mp3",
+   "category": "announcement",
+   "status": "verified by user"
+  },
+  "choose_teams": {
+   "src": "/audio/announcements/choose_teams.mp3",
+   "category": "announcement",
+   "status": "verified by user"
+  },
+  "confirm_teams": {
+   "src": "/audio/announcements/confirm_teams.mp3",
+   "category": "announcement",
+   "status": "verified by user"
+  },
+  "teams_finalized": {
+   "src": "/audio/announcements/teams_finalized.mp3",
+   "category": "announcement",
+   "status": "verified by user"
+  },
+  "photo_required": {
+   "src": "/audio/announcements/photo_required.mp3",
+   "category": "announcement",
+   "status": "verified by user"
+  },
+  "photo_deadline": {
+   "src": "/audio/announcements/photo_deadline.mp3",
+   "category": "announcement",
+   "status": "verified by user"
+  },
+  "thirty_seconds": {
+   "src": "/audio/announcements/thirty_seconds.mp3",
+   "category": "announcement",
+   "status": "verified by user"
+  },
+  "photo_submitted": {
+   "src": "/audio/announcements/photo_submitted.mp3",
+   "category": "announcement",
+   "status": "verified by user"
+  },
+  "photo_approved": {
+   "src": "/audio/announcements/photo_approved.mp3",
+   "category": "announcement",
+   "status": "verified by user"
+  },
+  "photo_rejected": {
+   "src": "/audio/announcements/photo_rejected.mp3",
+   "category": "announcement",
+   "status": "verified by user"
+  },
+  "photo_deadline_missed": {
+   "src": "/audio/announcements/photo_deadline_missed.mp3",
+   "category": "announcement",
+   "status": "verified by user"
+  },
+  "signal_new_location": {
+   "src": "/audio/announcements/signal_new_location.mp3",
+   "category": "announcement",
+   "status": "verified by user"
+  },
+  "sector_voting_open": {
+   "src": "/audio/announcements/sector_voting_open.mp3",
+   "category": "announcement",
+   "status": "verified by user"
+  },
+  "voting_reminder_cast_votes": {
+   "src": "/audio/announcements/voting_reminder_cast_votes.mp3",
+   "category": "announcement",
+   "status": "verified by user"
+  },
+  "sector_voting_closed": {
+   "src": "/audio/announcements/sector_voting_closed.mp3",
+   "category": "announcement",
+   "status": "verified by user"
+  },
+  "sector_closing_3_minutes": {
+   "src": "/audio/announcements/sector_closing_3_minutes.mp3",
+   "category": "announcement",
+   "status": "verified by user"
+  },
+  "sector_one_minute": {
+   "src": "/audio/announcements/sector_one_minute.mp3",
+   "category": "announcement",
+   "status": "verified by user"
+  },
+  "sector_closed": {
+   "src": "/audio/announcements/sector_closed.mp3",
+   "category": "announcement",
+   "status": "verified by user"
+  },
+  "sector_violation": {
+   "src": "/audio/announcements/sector_violation.mp3",
+   "category": "announcement",
+   "status": "verified by user"
+  },
+  "catch_reported": {
+   "src": "/audio/announcements/catch_reported.mp3",
+   "category": "announcement",
+   "status": "verified by user"
+  },
+  "catch_confirmed": {
+   "src": "/audio/announcements/catch_confirmed.mp3",
+   "category": "announcement",
+   "status": "verified by user"
+  },
+  "catch_disputed": {
+   "src": "/audio/announcements/catch_disputed.mp3",
+   "category": "announcement",
+   "status": "verified by user"
+  },
+  "final_two": {
+   "src": "/audio/announcements/final_two.mp3",
+   "category": "announcement",
+   "status": "verified by user"
+  },
+  "winner": {
+   "src": "/audio/announcements/winner.mp3",
+   "category": "announcement",
+   "status": "verified by user"
+  },
+  "game_over": {
+   "src": "/audio/announcements/game_over.mp3",
+   "category": "announcement",
+   "status": "verified by user"
+  },
+  "game_paused": {
+   "src": "/audio/announcements/game_paused.mp3",
+   "category": "announcement",
+   "status": "verified by user"
+  },
+  "game_resumed": {
+   "src": "/audio/announcements/game_resumed.mp3",
+   "category": "announcement",
+   "status": "verified by user"
+  },
+  "gps_unavailable": {
+   "src": "/audio/announcements/gps_unavailable.mp3",
+   "category": "announcement",
+   "status": "verified by user"
+  },
+  "connection_lost": {
+   "src": "/audio/announcements/connection_lost.mp3",
+   "category": "announcement",
+   "status": "verified by user"
+  },
+  "emergency_pause": {
+   "src": "/audio/announcements/emergency_pause.mp3",
+   "category": "announcement",
+   "status": "verified by user"
+  },
+  "sector_01": {
+   "src": "/audio/sectors/sector_01.mp3",
+   "category": "sector number",
+   "status": "verified by user"
+  },
+  "sector_02": {
+   "src": "/audio/sectors/sector_02.mp3",
+   "category": "sector number",
+   "status": "verified by user"
+  },
+  "sector_03": {
+   "src": "/audio/sectors/sector_03.mp3",
+   "category": "sector number",
+   "status": "verified by user"
+  },
+  "sector_04": {
+   "src": "/audio/sectors/sector_04.mp3",
+   "category": "sector number",
+   "status": "verified by user"
+  },
+  "sector_05": {
+   "src": "/audio/sectors/sector_05.mp3",
+   "category": "sector number",
+   "status": "verified by user"
+  },
+  "sector_06": {
+   "src": "/audio/sectors/sector_06.mp3",
+   "category": "sector number",
+   "status": "verified by user"
+  },
+  "sector_07": {
+   "src": "/audio/sectors/sector_07.mp3",
+   "category": "sector number",
+   "status": "verified by user"
+  },
+  "sector_08": {
+   "src": "/audio/sectors/sector_08.mp3",
+   "category": "sector number",
+   "status": "verified by user"
+  },
+  "sector_09": {
+   "src": "/audio/sectors/sector_09.mp3",
+   "category": "sector number",
+   "status": "verified by user"
+  },
+  "sector_10": {
+   "src": "/audio/sectors/sector_10.mp3",
+   "category": "sector number",
+   "status": "verified by user"
+  },
+  "one_minute": {
+   "src": "/audio/announcements/one_minute.mp3",
+   "category": "announcement",
+   "status": "present in archive, not in verified CSV"
+  }
+ },
+ "missingFromArchive": [
+  "signal_expired.mp3"
+ ],
+ "notInManifest": [
+  "one_minute.mp3"
+ ]
+}
