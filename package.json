@@ -1,0 +1,47 @@
+{
+  "name": "manhunt",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "assets": "node scripts/prepare-assets.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.118.0",
+    "@turf/area": "^7.1.0",
+    "@turf/boolean-point-in-polygon": "^7.1.0",
+    "@turf/distance": "^7.1.0",
+    "@turf/helpers": "^7.1.0",
+    "@turf/intersect": "^7.1.0",
+    "@turf/kinks": "^7.1.0",
+    "mapbox-gl": "^3.7.0",
+    "next": "^15.5.28",
+    "postgres": "^3.4.4",
+    "react": "^19.2.9",
+    "react-dom": "^19.2.9",
+    "web-push": "^3.6.7",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^22.7.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@types/web-push": "^3.6.3",
+    "autoprefixer": "^10.4.20",
+    "embedded-postgres": "^17.10.0-beta.17",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^15.5.28",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.14",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.3"
+  }
+}

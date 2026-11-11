@@ -1,0 +1,529 @@
+<title>manhunt.</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="theme-color" content="#ffffff">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+<style>
+/* Layout: phone-first stack — top info band / satellite map (flex) / bottom actions. On wide screens the
+   app sits in a 390×844 frame beside a small review panel. */
+:root{
+  --page:#e7e7ea; --surface:#ffffff; --surface-2:#f1f1f4; --seg-on:#ffffff;
+  --text:#0d0d0f; --text-2:#6b6b72; --text-3:#a2a2a9; --sep:rgba(16,16,24,.11);
+  --hider:#0a6cf0; --hider-soft:rgba(10,108,240,.10);
+  --seeker:#e0342b; --seeker-soft:rgba(224,52,43,.10);
+  --ok:#23945a; --warn:#b7791f;
+  --glass:rgba(255,255,255,.86); --shadow:0 1px 2px rgba(0,0,0,.08),0 6px 20px rgba(0,0,0,.10);
+  --font:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --page:#050506; --surface:#101012; --surface-2:#1d1d20; --seg-on:#3a3a3e;
+  --text:#f3f3f5; --text-2:#9a9aa2; --text-3:#5f5f67; --sep:rgba(255,255,255,.09);
+  --hider:#3d8bff; --hider-soft:rgba(61,139,255,.15);
+  --seeker:#ff4b41; --seeker-soft:rgba(255,75,65,.15);
+  --ok:#3fbf7a; --warn:#e0a23a;
+  --glass:rgba(28,28,31,.84); --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.45);
+  color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --page:#050506; --surface:#101012; --surface-2:#1d1d20; --seg-on:#3a3a3e;
+  --text:#f3f3f5; --text-2:#9a9aa2; --text-3:#5f5f67; --sep:rgba(255,255,255,.09);
+  --hider:#3d8bff; --hider-soft:rgba(61,139,255,.15);
+  --seeker:#ff4b41; --seeker-soft:rgba(255,75,65,.15);
+  --ok:#3fbf7a; --warn:#e0a23a;
+  --glass:rgba(28,28,31,.84); --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.45);
+  color-scheme:dark;}
+/* Map-native colours: identical in both themes (the imagery never changes). */
+:root{--me:#0a84ff; --map-red:255,59,48; --map-blue:10,132,255;}
+
+html,body{height:100%}
+body{margin:0;background:var(--page);color:var(--text);font-family:var(--font);font-optical-sizing:auto;
+  font-weight:400;font-style:normal;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--hider);outline-offset:2px}
+.tnum{font-variant-numeric:tabular-nums}
+
+.stage{height:100%;display:flex;align-items:center;justify-content:center;gap:40px}
+.device{position:relative;overflow:hidden;display:flex;flex-direction:column;background:var(--surface);
+  width:100%;height:100%}
+@media (min-width:760px){
+  .stage{padding-block:24px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));box-sizing:border-box}
+  .device{width:390px;height:min(844px,100%);border-radius:44px;box-shadow:0 0 0 1px var(--sep),0 30px 80px rgba(0,0,0,.18)}
+}
+
+/* ---------- top ---------- */
+.top{flex:none;padding:14px max(20px,env(safe-area-inset-right,0px)) 16px max(20px,env(safe-area-inset-left,0px));
+  padding-top:calc(14px + env(safe-area-inset-top,0px));display:flex;flex-direction:column;gap:14px}
+@media (min-width:760px){.top{padding-top:22px}}
+.row1{display:flex;align-items:center;justify-content:space-between;min-height:28px}
+.wordmark{font-size:19px;font-weight:700;letter-spacing:-.035em}
+.status{display:flex;align-items:center;gap:8px}
+.loc{width:28px;height:28px;display:grid;place-items:center;color:var(--text-2);border-radius:14px}
+.loc svg{width:13px;height:13px}
+.role{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 11px;border-radius:14px;
+  font-size:13px;font-weight:600;letter-spacing:-.005em;background:var(--hider-soft);color:var(--hider)}
+.role i{width:7px;height:7px;border-radius:50%;background:currentColor}
+[data-role="seeker"] .role{background:var(--seeker-soft);color:var(--seeker)}
+.row2{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.t-label{font-size:13px;font-weight:500;color:var(--text-2);margin-bottom:4px}
+.t-val{font-size:42px;font-weight:600;letter-spacing:-.04em;line-height:1;font-variant-numeric:tabular-nums}
+[data-state="paused"] .t-val{color:var(--text-3)}
+.meta{text-align:right;min-width:0}
+.m1{font-size:17px;font-weight:600;letter-spacing:-.015em}
+.m2{font-size:13px;font-weight:500;color:var(--text-2);margin-top:3px;display:flex;align-items:center;gap:6px;justify-content:flex-end}
+.m2 .dot{width:6px;height:6px;border-radius:50%;background:var(--seeker)}
+
+/* ---------- map ---------- */
+.map{position:relative;flex:1;min-height:0;overflow:hidden;background:#2b2f2c;touch-action:none;cursor:grab;
+  border-top:1px solid var(--sep);border-bottom:1px solid var(--sep);user-select:none;-webkit-user-select:none}
+.map.dragging{cursor:grabbing}
+.world{position:absolute;left:0;top:0;width:1220px;height:760px;transform-origin:0 0;will-change:transform}
+.world img{display:block;width:1220px;height:760px;max-width:none;max-height:none;pointer-events:none;-webkit-user-drag:none}
+.world svg{position:absolute;inset:0;width:1220px;height:760px;overflow:visible;pointer-events:none}
+.sec{fill:transparent;stroke:rgba(255,255,255,.82);stroke-width:1.5;vector-effect:non-scaling-stroke}
+.sec.closed{fill:url(#hatch)}
+.sec.closing{stroke:rgb(var(--map-red));stroke-width:2.2;stroke-dasharray:7 5}
+.zone{fill:rgba(var(--map-red),.13);stroke:rgb(var(--map-red));stroke-width:2;vector-effect:non-scaling-stroke;transition:r 1.2s cubic-bezier(.3,.7,.2,1)}
+.pins{position:absolute;inset:0;pointer-events:none}
+.pin{position:absolute;left:0;top:0;width:max-content;transform:translate(-50%,-50%)}
+.slabel{min-width:24px;height:24px;padding:0 7px;box-sizing:border-box;border-radius:12px;display:flex;align-items:center;justify-content:center;gap:3px;
+  font-size:12px;font-weight:600;color:#fff;background:rgba(10,10,12,.48);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.28);font-variant-numeric:tabular-nums;white-space:nowrap}
+.slabel.closed{color:rgba(255,255,255,.75)}
+.slabel.closing{background:rgb(var(--map-red));box-shadow:none}
+.me{width:18px;height:18px;border-radius:50%;background:var(--me);box-shadow:0 0 0 3px #fff,0 1px 6px rgba(0,0,0,.45)}
+.halo{border-radius:50%;background:rgba(var(--map-blue),.16);box-shadow:inset 0 0 0 1px rgba(var(--map-blue),.35)}
+.glow{width:44px;height:44px;border-radius:50%;pointer-events:auto;cursor:pointer;
+  background:radial-gradient(circle,rgba(var(--map-red),.95) 0 16%,rgba(var(--map-red),.55) 34%,rgba(var(--map-red),0) 68%)}
+.glow.team-hider{background:radial-gradient(circle,rgba(var(--map-blue),.9) 0 16%,rgba(var(--map-blue),.45) 34%,rgba(var(--map-blue),0) 68%)}
+.zlabel{height:22px;padding:0 8px;border-radius:11px;display:flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;color:#fff;
+  background:rgb(var(--map-red));white-space:nowrap;font-variant-numeric:tabular-nums}
+
+.mapbtn{position:absolute;right:max(10px,env(safe-area-inset-right,0px));width:40px;height:40px;border-radius:12px;display:grid;place-items:center;
+  background:var(--glass);-webkit-backdrop-filter:blur(20px) saturate(1.6);backdrop-filter:blur(20px) saturate(1.6);box-shadow:var(--shadow);color:var(--text)}
+.mapbtn svg{width:19px;height:19px}
+#compass{top:10px}
+#recenter{bottom:10px;color:var(--me)}
+.needle{transition:transform .35s ease}
+.banner{position:absolute;left:10px;right:60px;top:10px;padding:11px 13px;border-radius:16px;display:grid;grid-template-columns:auto 1fr auto;
+  column-gap:10px;align-items:start;background:var(--glass);-webkit-backdrop-filter:blur(20px) saturate(1.6);backdrop-filter:blur(20px) saturate(1.6);
+  box-shadow:var(--shadow);transform:translateY(calc(-100% - 16px));opacity:0;transition:transform .45s cubic-bezier(.2,.8,.2,1),opacity .3s;text-align:left}
+.banner.show{transform:none;opacity:1}
+.banner .bd{width:8px;height:8px;border-radius:50%;margin-top:5px;background:var(--text-3)}
+.banner .bd.seeker{background:var(--seeker)} .banner .bd.hider{background:var(--hider)}
+.banner b{display:block;font-size:14px;font-weight:600;letter-spacing:-.01em}
+.banner span{display:block;font-size:13px;color:var(--text-2);margin-top:2px;line-height:1.35}
+.banner time{font-size:12px;color:var(--text-3);margin-top:1px}
+.pausecard{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(260px,80%);padding:16px 18px;border-radius:16px;text-align:center;
+  background:var(--glass);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);box-shadow:var(--shadow)}
+.pausecard b{display:block;font-size:15px;font-weight:600} .pausecard span{display:block;font-size:13px;color:var(--text-2);margin-top:4px;line-height:1.4}
+.attrib{position:absolute;left:8px;bottom:6px;font-size:9.5px;color:rgba(255,255,255,.78);text-shadow:0 1px 2px rgba(0,0,0,.6);pointer-events:none}
+
+/* ---------- bottom ---------- */
+.bottom{flex:none;padding:12px max(16px,env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:6px}
+@media (min-width:760px){.bottom{padding-bottom:22px}}
+.primary{height:52px;border-radius:14px;display:flex;align-items:center;gap:10px;padding:0 18px;background:var(--hider);color:#fff;
+  font-size:16px;font-weight:600;letter-spacing:-.01em;transition:transform .12s,opacity .2s}
+.primary:active{transform:scale(.985)}
+[data-role="seeker"] .primary{background:var(--seeker)}
+.primary svg{width:21px;height:21px;flex:none}
+.primary .pm{margin-left:auto;font-size:15px;font-weight:500;opacity:.82;font-variant-numeric:tabular-nums}
+.primary.quiet{background:var(--surface-2);color:var(--text)}
+[data-state="paused"] .primary{opacity:.4;pointer-events:none}
+.actions{display:grid;grid-template-columns:repeat(3,1fr)}
+.act{height:54px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--text-2);font-size:11.5px;font-weight:500;position:relative;border-radius:10px}
+.act svg{width:23px;height:23px}
+.act:active,.act.on{color:var(--text)}
+.act .badge{position:absolute;top:7px;left:calc(50% + 7px);height:15px;min-width:15px;padding:0 4px;box-sizing:border-box;border-radius:8px;
+  background:var(--seeker);color:#fff;font-size:10px;font-weight:600;display:grid;place-items:center;font-variant-numeric:tabular-nums}
+
+/* ---------- sheets ---------- */
+.scrim{position:absolute;inset:0;background:rgba(0,0,0,.28);opacity:0;pointer-events:none;transition:opacity .3s;z-index:20}
+.scrim.show{opacity:1;pointer-events:auto}
+.sheet{position:absolute;left:0;right:0;bottom:0;max-height:82%;display:flex;flex-direction:column;background:var(--surface);
+  border-radius:16px 16px 0 0;box-shadow:0 -8px 30px rgba(0,0,0,.18);transform:translateY(102%);transition:transform .38s cubic-bezier(.2,.8,.2,1),visibility 0s linear .38s;visibility:hidden;z-index:21}
+.sheet.show{transform:none;visibility:visible;transition-delay:0s}
+.grab{width:36px;height:5px;border-radius:3px;background:var(--sep);margin:7px auto 0}
+.sh-head{display:flex;align-items:center;justify-content:space-between;padding:10px 20px 6px}
+.sh-head h2{margin:0;font-size:18px;font-weight:650;letter-spacing:-.02em}
+.x{width:30px;height:30px;border-radius:15px;display:grid;place-items:center;background:var(--surface-2);color:var(--text-2)}
+.x svg{width:13px;height:13px}
+.sh-body{overflow:auto;padding:4px 20px calc(20px + env(safe-area-inset-bottom,0px))}
+.sub{font-size:13.5px;color:var(--text-2);line-height:1.45;margin:0 0 14px}
+.list{border-radius:12px;background:var(--surface-2);overflow:hidden;margin-bottom:18px}
+.li{display:flex;align-items:center;gap:12px;min-height:50px;padding:8px 14px;box-sizing:border-box;width:100%;text-align:left;position:relative}
+.li+.li::before{content:"";position:absolute;left:14px;right:0;top:0;height:1px;background:var(--sep)}
+.li .tx{flex:1;min-width:0}
+.li .t1{font-size:15px;font-weight:500;letter-spacing:-.01em}
+.li .t2{font-size:12.5px;color:var(--text-2);margin-top:2px}
+.li .acc{font-size:13px;color:var(--text-2);font-variant-numeric:tabular-nums}
+.li.danger .t1{color:var(--seeker)}
+.av{width:32px;height:32px;border-radius:16px;display:grid;place-items:center;font-size:13px;font-weight:600;background:var(--hider-soft);color:var(--hider);flex:none}
+.av.s{background:var(--seeker-soft);color:var(--seeker)}
+.chip{font-size:12px;font-weight:600;padding:3px 8px;border-radius:8px;background:var(--surface);color:var(--text-2)}
+.chip.ok{color:var(--ok)} .chip.warn{color:var(--warn)} .chip.bad{color:var(--seeker)}
+.cap{font-size:12px;font-weight:600;color:var(--text-2);letter-spacing:.02em;margin:0 0 7px 2px}
+.radio{width:20px;height:20px;border-radius:10px;box-shadow:inset 0 0 0 1.5px var(--text-3);flex:none}
+.li[aria-checked="true"] .radio{box-shadow:inset 0 0 0 6px var(--seeker)}
+.btn{width:100%;height:50px;border-radius:13px;font-size:16px;font-weight:600;background:var(--text);color:var(--surface)}
+.btn.red{background:var(--seeker);color:#fff} .btn.blue{background:var(--hider);color:#fff}
+.btn[disabled]{opacity:.35;pointer-events:none}
+.btn.ghost{background:var(--surface-2);color:var(--text)}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;padding:2px;border-radius:9px;background:var(--surface-2);gap:2px}
+.seg button{height:30px;border-radius:7px;font-size:13px;font-weight:500;color:var(--text)}
+.seg button[aria-pressed="true"]{background:var(--seg-on);font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.li .seg{width:190px;flex:none}
+.sw{width:46px;height:28px;border-radius:14px;background:var(--text-3);position:relative;flex:none;transition:background .2s}
+.sw::after{content:"";position:absolute;left:2px;top:2px;width:24px;height:24px;border-radius:12px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s}
+.sw[aria-checked="true"]{background:var(--ok)} .sw[aria-checked="true"]::after{transform:translateX(18px)}
+.ex{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.ex figure{margin:0}
+.ex img{width:100%;aspect-ratio:4/5;object-fit:cover;border-radius:10px;display:block}
+.ex figcaption{font-size:12.5px;margin-top:6px;color:var(--text-2);line-height:1.35}
+.ex figcaption b{display:block;font-weight:600;color:var(--ok)}
+.ex figure:last-child figcaption b{color:var(--seeker)}
+.rules{margin:0 0 16px;padding:0;list-style:none;font-size:14px;line-height:1.45}
+.rules li{padding:7px 0;border-top:1px solid var(--sep)} .rules li:first-child{border-top:0}
+.preview{width:100%;border-radius:12px;display:block;margin-bottom:12px;max-height:280px;object-fit:cover}
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-bottom:12px}
+.cell{grid-column:span 2;height:52px;border-radius:10px;background:var(--surface-2);font-size:17px;font-weight:600;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-variant-numeric:tabular-nums}
+.cell.w{grid-column:span 3}
+.cell small{font-size:10.5px;font-weight:500;color:var(--text-2)}
+.cell[aria-pressed="true"]{box-shadow:inset 0 0 0 2px var(--seeker);color:var(--seeker)}
+.cell:disabled{opacity:.4;cursor:default}
+.ev{display:grid;grid-template-columns:52px 1fr;gap:10px;padding:10px 0;border-top:1px solid var(--sep);font-size:14px;line-height:1.4}
+.ev:first-child{border-top:0}
+.ev time{color:var(--text-3);font-size:12.5px;font-variant-numeric:tabular-nums;padding-top:1px}
+.ev span{display:block;color:var(--text-2);font-size:12.5px}
+.toast{position:absolute;left:50%;bottom:150px;transform:translate(-50%,10px);max-width:84%;padding:10px 14px;border-radius:12px;
+  background:var(--text);color:var(--surface);font-size:13.5px;font-weight:500;opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:30;text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+/* ---------- review panel (wide screens only) ---------- */
+.review{width:236px;display:none;flex-direction:column;gap:18px;font-size:13px}
+@media (min-width:760px){.review{display:flex}}
+.review h1{font-size:15px;font-weight:650;margin:0;letter-spacing:-.01em}
+.review p{margin:0;color:var(--text-2);line-height:1.5;font-size:12.5px}
+.review label{display:block;font-size:12px;font-weight:600;color:var(--text-2);margin-bottom:6px}
+.review .seg{background:var(--surface)}
+.review .seg button[aria-pressed="true"]{background:var(--surface-2)}
+.review .btn{height:36px;font-size:13px;border-radius:9px;background:var(--surface);color:var(--text);box-shadow:0 0 0 1px var(--sep)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="stage">
+<div class="device" id="app" data-role="hider" data-state="live">
+  <header class="top">
+    <div class="row1">
+      <span class="wordmark">manhunt.</span>
+      <div class="status">
+        <button class="loc" id="locBtn" aria-label="Location sharing is on"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 3 3 10.6l7.4 2.1 2.1 7.3z"/></svg></button>
+        <span class="role" id="rolePill"><i></i><span id="roleTxt">Hider</span></span>
+      </div>
+    </div>
+    <div class="row2">
+      <div><div class="t-label" id="tLabel">Photo hint due</div><div class="t-val" id="tVal">1:48</div></div>
+      <div class="meta"><div class="m1" id="m1">Sector 7</div><div class="m2" id="m2">9 of 12 hiding</div></div>
+    </div>
+  </header>
+
+  <main class="map" id="map" aria-label="Satellite map of Town Center">
+    <div class="world" id="world">
+      <img id="sat" alt="" src="__SAT__">
+      <svg viewBox="0 0 1220 760" id="ov">
+        <defs><pattern id="hatch" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+          <rect width="9" height="9" fill="rgba(12,12,14,.42)"/><line x1="0" y1="0" x2="0" y2="9" stroke="rgba(255,255,255,.35)" stroke-width="2"/></pattern></defs>
+        <g id="secs"></g>
+        <circle id="zone" class="zone" cx="950" cy="560" r="0"/>
+      </svg>
+    </div>
+    <div class="pins" id="pins"></div>
+    <button class="banner" id="banner" aria-live="polite"><i class="bd" id="bDot"></i><div><b id="bT"></b><span id="bB"></span></div><time>now</time></button>
+    <button class="mapbtn" id="compass" aria-label="Rotate map"><svg viewBox="0 0 24 24"><g class="needle" id="needle"><path d="M12 3.5 15 12H9z" fill="rgb(255,59,48)"/><path d="M12 20.5 9 12h6z" fill="currentColor" opacity=".35"/></g></svg></button>
+    <button class="mapbtn" id="recenter" aria-label="Center on my location"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M20.5 3.5 3.5 10.7l7.1 2 2 7.1z"/></svg></button>
+    <div class="pausecard" id="pausecard" hidden><b>Paused by host</b><span>Stay where you are. Timers are frozen until the host resumes.</span></div>
+    <div class="attrib">Imagery © Esri, Maxar</div>
+  </main>
+
+  <footer class="bottom">
+    <button class="primary" id="primary"><span id="pIcon"></span><span id="pTxt">Photo hint</span><span class="pm" id="pMeta">1:48</span></button>
+    <nav class="actions" id="actions"></nav>
+  </footer>
+
+  <div class="scrim" id="scrim"></div>
+  <section class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="shTitle">
+    <div class="grab"></div>
+    <div class="sh-head"><h2 id="shTitle"></h2><button class="x" id="shClose" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    <div class="sh-body" id="shBody"></div>
+  </section>
+  <div class="toast" id="toast"></div>
+</div>
+
+<aside class="review" aria-label="Prototype controls">
+  <div><h1>Prototype controls</h1><p style="margin-top:6px">Sample data only. Not part of the app.</p></div>
+  <div><label>Role</label><div class="seg" data-ctl="role"><button data-v="hider">Hider</button><button data-v="seeker">Seeker</button></div></div>
+  <div><label>Appearance</label><div class="seg" data-ctl="theme"><button data-v="system">System</button><button data-v="light">Light</button><button data-v="dark">Dark</button></div></div>
+  <div><label>Game state</label><div class="seg" data-ctl="state"><button data-v="live">Live</button><button data-v="voting">Voting</button><button data-v="paused">Paused</button></div></div>
+  <button class="btn" id="rvNote">Show next notification</button>
+  <p>Drag to pan, pinch or scroll to zoom. The compass switches between the visitor-guide orientation (west up) and north up.</p>
+  <p>Sector lines are provisional, traced along the streets from your annotated map. They still need on-site checks.</p>
+</aside>
+</div>
+
+<script>
+(function(){
+const $=s=>document.querySelector(s), app=$('#app');
+const IMG_W=1220, IMG_H=760, MPP=0.5976;            // metres per image pixel
+const SECTORS={1:[80,78,430,290],10:[80,290,430,485],9:[80,485,430,675],2:[430,78,620,290],7:[430,290,620,485],8:[430,485,620,675],
+  3:[620,78,835,405],6:[620,405,835,675],4:[835,78,1135,405],5:[835,405,1135,675]};
+const TC_BOX=[80,78,1135,675];
+
+const ICON={
+ camera:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 8h3.2l1.8-2.5h6L16.8 8H20a1 1 0 0 1 1 1v9.5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.3" r="3.6"/></svg>',
+ group:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="9" cy="8.5" r="3.2"/><path d="M3.5 19.5c.6-3.1 2.8-4.8 5.5-4.8s4.9 1.7 5.5 4.8"/><circle cx="17" cy="9.5" r="2.4"/><path d="M16.3 14.8c2.2 0 3.8 1.4 4.3 4"/></svg>',
+ events:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>',
+ more:'<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5.5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="18.5" cy="12" r="1.7"/></svg>',
+ target:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="7.5"/><circle cx="12" cy="12" r="2.6"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3"/></svg>',
+ vote:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3.5"/><path d="m8.5 12.3 2.4 2.4 4.6-5"/></svg>',
+ check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>'
+};
+
+// ---------- state ----------
+const S={role:'hider',state:'live',theme:'system',rot:90,sound:true,
+  t:{hint:108,voteIn:372,voteClose:86,closing:171,zone:20},zoneStage:2,photo:null,voted:null,catchTarget:null,noteIx:0};
+try{const p=JSON.parse(localStorage.getItem('mh.prefs')||'{}'); if(p.theme)S.theme=p.theme; if(p.sound===false)S.sound=false;}catch(e){}
+const save=()=>{try{localStorage.setItem('mh.prefs',JSON.stringify({theme:S.theme,sound:S.sound}))}catch(e){}};
+const fmt=s=>{s=Math.max(0,Math.round(s));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
+
+const PEOPLE={
+ hider:{me:[575,445],acc:6,others:[{p:[592,425],n:'Maya',team:'hider'}],sector:7},
+ seeker:{me:[690,160],acc:8,others:[{p:[300,575],n:'Jordan',team:'seeker'},{p:[960,300],n:'Priya',team:'seeker'}],sector:3}
+};
+const NOTES={
+ hider:[{c:'seeker',t:'Sector 4 is closing',b:'It closes in 2:51. Your group is clear.'},
+        {c:'hider',t:'Photo hint requested',b:'Send a sign or storefront within 2 minutes.'},
+        {c:'',t:'Catch confirmed',b:'Jordan is now a seeker. 9 hiders left.'}],
+ seeker:[{c:'seeker',t:'Search zone · Group A',b:'Stage 2 of 3. It shrinks again in 0:20.'},
+         {c:'seeker',t:'Sector voting is open',b:'Pick one sector to close. 1:26 left.'},
+         {c:'',t:'Photo hint approved',b:'Group C sent a new photo. Open Events to view.'}]
+};
+
+// ---------- theme ----------
+function applyTheme(){
+  const r=document.documentElement;
+  if(S.theme==='system') r.removeAttribute('data-theme'); else r.setAttribute('data-theme',S.theme);
+  syncSegs();
+}
+// ---------- map engine ----------
+const map=$('#map'), world=$('#world'), pins=$('#pins'), secs=$('#secs'), zone=$('#zone');
+let V={s:1,rot:90,tx:0,ty:0}, minS=.2, maxS=3;
+const rad=()=>V.rot*Math.PI/180;
+function project(x,y){const c=Math.cos(rad()),s=Math.sin(rad()),X=V.s*x,Y=V.s*y;return[V.tx+c*X-s*Y,V.ty+s*X+c*Y]}
+function unproject(X,Y){const c=Math.cos(rad()),s=Math.sin(rad()),dx=X-V.tx,dy=Y-V.ty;return[(c*dx+s*dy)/V.s,(-s*dx+c*dy)/V.s]}
+function centerOn(px,py){const W=map.clientWidth,H=map.clientHeight,c=Math.cos(rad()),s=Math.sin(rad());V.tx=W/2-(c*V.s*px-s*V.s*py);V.ty=H/2-(s*V.s*px+c*V.s*py)}
+function fitScale(box,rot){const W=map.clientWidth,H=map.clientHeight,bw=box[2]-box[0],bh=box[3]-box[1],r=rot*Math.PI/180,
+  c=Math.abs(Math.cos(r)),s=Math.abs(Math.sin(r)),sw=bw*c+bh*s,sh=bw*s+bh*c;return Math.min((W-24)/sw,(H-24)/sh)}
+function clampView(){const W=map.clientWidth,H=map.clientHeight;let [cx,cy]=unproject(W/2,H/2);
+  const nx=Math.min(Math.max(cx,0),IMG_W),ny=Math.min(Math.max(cy,0),IMG_H);if(nx!==cx||ny!==cy)centerOn(nx,ny)}
+function render(){
+  world.style.transform=`translate(${V.tx}px,${V.ty}px) rotate(${V.rot}deg) scale(${V.s})`;
+  for(const el of pins.children){let [x,y]=project(+el.dataset.x,+el.dataset.y);if(el.dataset.zone)y-=zoneR()*V.s+16;el.style.left=x+'px';el.style.top=y+'px';
+    if(el.dataset.r){const d=Math.max(30,2*(+el.dataset.r)/MPP*V.s);el.style.width=el.style.height=d+'px'}}
+  $('#needle').style.transform=`rotate(${V.rot}deg)`;$('#needle').style.transformOrigin='12px 12px';
+}
+function zoomAt(X,Y,f){const [px,py]=unproject(X,Y);V.s=Math.min(maxS,Math.max(minS,V.s*f));
+  const c=Math.cos(rad()),s=Math.sin(rad());V.tx=X-(c*V.s*px-s*V.s*py);V.ty=Y-(s*V.s*px+c*V.s*py);clampView();render()}
+let anim=null;
+function flyTo(px,py,s,rot,ms=420){cancelAnimationFrame(anim);const W=map.clientWidth,H=map.clientHeight,[sx,sy]=unproject(W/2,H/2),
+  s0=V.s,r0=V.rot,t0=performance.now();let dr=rot-r0;
+  const step=now=>{let k=Math.min(1,(now-t0)/ms);k=1-Math.pow(1-k,3);V.s=s0+(s-s0)*k;V.rot=r0+dr*k;centerOn(sx+(px-sx)*k,sy+(py-sy)*k);render();if(k<1)anim=requestAnimationFrame(step)};
+  if(matchMedia('(prefers-reduced-motion:reduce)').matches){V.s=s;V.rot=rot;centerOn(px,py);render();return}
+  anim=requestAnimationFrame(step)}
+// Fit Town Center, but never narrower than the map: imagery always spans the full map width.
+function fitView(rot){return Math.max(fitScale(TC_BOX,rot),map.clientWidth/(rot%180?IMG_H:IMG_W))}
+function fitTC(){V.rot=S.rot;V.s=fitView(V.rot);const f=Math.min(fitScale(TC_BOX,0),fitScale(TC_BOX,90));minS=f*.7;maxS=f*6;centerOn((TC_BOX[0]+TC_BOX[2])/2,(TC_BOX[1]+TC_BOX[3])/2);render()}
+
+// pointer pan / pinch
+const ptrs=new Map();let last=null;
+map.addEventListener('pointerdown',e=>{if(e.target.closest('button,.glow'))return;map.setPointerCapture(e.pointerId);ptrs.set(e.pointerId,[e.clientX,e.clientY]);last=null;map.classList.add('dragging');cancelAnimationFrame(anim)});
+map.addEventListener('pointermove',e=>{if(!ptrs.has(e.pointerId))return;ptrs.set(e.pointerId,[e.clientX,e.clientY]);
+  const r=map.getBoundingClientRect(),pts=[...ptrs.values()].map(p=>[p[0]-r.left,p[1]-r.top]);
+  const mid=pts.reduce((a,p)=>[a[0]+p[0]/pts.length,a[1]+p[1]/pts.length],[0,0]),dist=pts.length>1?Math.hypot(pts[0][0]-pts[1][0],pts[0][1]-pts[1][1]):0;
+  if(last&&last.n===pts.length){V.tx+=mid[0]-last.mid[0];V.ty+=mid[1]-last.mid[1];if(pts.length>1&&last.dist)zoomAt(mid[0],mid[1],dist/last.dist);else{clampView();render()}}
+  last={mid,dist,n:pts.length}});
+const up=e=>{ptrs.delete(e.pointerId);last=null;if(!ptrs.size)map.classList.remove('dragging')};
+map.addEventListener('pointerup',up);map.addEventListener('pointercancel',up);
+map.addEventListener('wheel',e=>{e.preventDefault();const r=map.getBoundingClientRect();zoomAt(e.clientX-r.left,e.clientY-r.top,Math.exp(-e.deltaY*.0018))},{passive:false});
+map.addEventListener('dblclick',e=>{if(e.target.closest('button'))return;const r=map.getBoundingClientRect();zoomAt(e.clientX-r.left,e.clientY-r.top,1.7)});
+$('#recenter').onclick=()=>{const m=PEOPLE[S.role].me;flyTo(m[0],m[1],Math.max(V.s,fitScale(TC_BOX,V.rot)*2.2),V.rot)};
+$('#compass').onclick=()=>{S.rot=S.rot===90?0:90;const W=map.clientWidth,H=map.clientHeight,[cx,cy]=unproject(W/2,H/2);
+  flyTo(cx,cy,V.s*fitView(S.rot)/fitView(V.rot),S.rot);
+  toast(S.rot===90?'Guide orientation · west up':'North up')};
+new ResizeObserver(()=>{const W=map.clientWidth;if(W)fitTC()}).observe(map);
+
+// ---------- map content ----------
+const closed=new Set([1]), closing=4;
+function drawSectors(){
+  secs.innerHTML='';pins.innerHTML='';
+  for(const [k,[a,b,c,d]] of Object.entries(SECTORS)){
+    const r=document.createElementNS('http://www.w3.org/2000/svg','rect');r.setAttribute('x',a);r.setAttribute('y',b);r.setAttribute('width',c-a);r.setAttribute('height',d-b);
+    r.setAttribute('class','sec'+(closed.has(+k)?' closed':'')+(+k===closing?' closing':''));secs.appendChild(r)}
+  const p=PEOPLE[S.role];
+  if(S.role==='seeker'){const z=addPin('<div class="zlabel" id="zl"></div>',950,560);z.dataset.zone=1}
+  p.others.forEach(o=>{const el=addPin('',o.p[0],o.p[1]);el.className='pin glow team-'+o.team;el.title=o.n+' · approximate';
+    el.onclick=()=>toast(o.n+' · approximate, ±25 m')});
+  addPin('<div class="halo" style="width:100%;height:100%"></div>',p.me[0],p.me[1],{r:p.acc});
+  addPin('<div class="me"></div>',p.me[0],p.me[1]);
+  for(const [k,[a,b,c,d]] of Object.entries(SECTORS)){
+    const cls=closed.has(+k)?' closed':(+k===closing?' closing':'');
+    addPin(`<div class="slabel${cls}" data-sec="${k}">${k}${cls===' closing'?' · <span class="cl tnum"></span>':''}${cls===' closed'?' · Closed':''}</div>`,(a+c)/2,(b+d)/2)}
+  zone.setAttribute('r',S.role==='seeker'?zoneR():0);
+  render();tickUI();
+}
+function zoneR(){return [110,82,56][S.zoneStage-1]}
+function addPin(html,x,y,o={}){const el=document.createElement('div');el.className='pin';el.dataset.x=x;el.dataset.y=y;if(o.r)el.dataset.r=o.r;el.innerHTML=html;pins.appendChild(el);return el}
+
+// ---------- chrome per role/state ----------
+// [icon, label, sheet]. Seeker "Team" opens the shared group/team sheet (it has a seeker branch).
+const ACTIONS={hider:[['group','Group','group'],['events','Events','events'],['more','More','more']],seeker:[['vote','Vote','vote'],['group','Team','group'],['more','More','more']]};
+function renderChrome(){
+  app.dataset.role=S.role;app.dataset.state=S.state;
+  $('#roleTxt').textContent=S.role==='hider'?'Hider':'Seeker';
+  $('#pausecard').hidden=S.state!=='paused';
+  const acts=$('#actions');acts.innerHTML='';
+  for(const [ic,label,key] of ACTIONS[S.role]){const b=document.createElement('button');b.className='act';b.dataset.sheet=key;
+    b.innerHTML=ICON[ic==='vote'?'vote':ic]+`<span>${label}</span>`+(label==='Vote'&&S.state==='voting'&&!S.voted?'<i class="badge">1</i>':'');
+    b.onclick=()=>openSheet(key);acts.appendChild(b)}
+  $('#pIcon').innerHTML=S.role==='hider'?ICON.camera:ICON.target;
+  drawSectors();tickUI();
+}
+function tickUI(){
+  const t=S.t,h=S.role==='hider',st=S.state;let lab,val,m1,m2;
+  if(h){lab='Photo hint due';val=t.hint;m1='Sector 7';m2=st==='voting'?'<i class="dot"></i>Seekers are voting':'9 of 12 hiding'}
+  else if(st==='voting'){lab='Voting closes';val=t.voteClose;m1='Sector 3';m2=(S.voted?'3':'2')+' of 3 seekers voted'}
+  else{lab='Next sector vote';val=t.voteIn;m1='Sector 3';m2='3 seekers · 9 hiding'}
+  if(st==='paused')lab='Paused by host';
+  $('#tLabel').textContent=lab;$('#tVal').textContent=fmt(val);$('#m1').textContent=m1;$('#m2').innerHTML=m2;
+  if(h){if(S.photo==='sent'){$('#primary').classList.add('quiet');$('#pTxt').textContent='Photo in review';$('#pMeta').textContent='Host'}
+        else{$('#primary').classList.remove('quiet');$('#pTxt').textContent='Take photo hint';$('#pMeta').textContent=fmt(t.hint)}}
+  else{$('#primary').classList.remove('quiet');$('#pTxt').textContent='Report catch';$('#pMeta').textContent=''}
+  document.querySelectorAll('.cl').forEach(e=>e.textContent=fmt(t.closing));
+  document.querySelectorAll('[data-t]').forEach(e=>e.textContent=fmt(t[e.dataset.t]));
+  const zl=$('#zl');if(zl)zl.textContent=`Search zone · ${S.zoneStage}/3 · ${fmt(t.zone)}`;
+}
+setInterval(()=>{if(S.state==='paused')return;const t=S.t;
+  t.hint=t.hint>0?t.hint-1:300;t.voteIn=t.voteIn>0?t.voteIn-1:600;t.closing=t.closing>0?t.closing-1:180;
+  if(S.state==='voting'){t.voteClose=t.voteClose>0?t.voteClose-1:120}
+  t.zone--;if(t.zone<0){S.zoneStage=S.zoneStage%3+1;t.zone=20;if(S.role==='seeker'){zone.setAttribute('r',zoneR());render()}}
+  tickUI()},1000);
+
+// ---------- notifications ----------
+let bTimer;
+function showNote(){const n=NOTES[S.role][S.noteIx%3];S.noteIx++;$('#bT').textContent=n.t;$('#bB').textContent=n.b;$('#bDot').className='bd '+n.c;
+  const b=$('#banner');b.classList.add('show');clearTimeout(bTimer);bTimer=setTimeout(()=>b.classList.remove('show'),7000)}
+$('#banner').onclick=()=>$('#banner').classList.remove('show');
+let tTimer;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(tTimer);tTimer=setTimeout(()=>t.classList.remove('show'),2200)}
+$('#locBtn').onclick=()=>toast('Location on. Others only ever see an approximate area.');
+
+// ---------- sheets ----------
+const sheet=$('#sheet'),scrim=$('#scrim');
+// Closed sheet: inert + aria-hidden (and visibility:hidden after the slide) so its controls leave tab order and the accessibility tree.
+let opener=null;
+function setSheetOpen(on){sheet.classList.toggle('show',on);scrim.classList.toggle('show',on);sheet.inert=!on;sheet.setAttribute('aria-hidden',String(!on))}
+setSheetOpen(false);
+function closeSheet(){if(!sheet.classList.contains('show'))return;setSheetOpen(false);document.querySelectorAll('.act').forEach(a=>a.classList.remove('on'));
+  if(opener&&opener.isConnected)opener.focus({preventScroll:true});opener=null}
+scrim.onclick=closeSheet;$('#shClose').onclick=closeSheet;
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet()});
+$('#primary').onclick=()=>openSheet(S.role==='hider'?'photo':'catch');
+const SHEETS=['photo','catch','vote','group','events','more','safety','leave'];
+function openSheet(k){
+  if(!SHEETS.includes(k)){console.warn('Unknown sheet',k);return}
+  if(!sheet.classList.contains('show')){const a=document.activeElement;opener=a&&!sheet.contains(a)?a:null}
+  const body=$('#shBody');let title='',html='';
+  document.querySelectorAll('.act').forEach(a=>a.classList.toggle('on',a.dataset.sheet===k));
+  if(k==='photo'){title='Photo hint';
+    if(S.photo==='sent')html=`<p class="sub">Your photo is with the host. You'll be told when it's approved or rejected.</p>${S.photoUrl?`<img class="preview" src="${S.photoUrl}" alt="Your submitted photo">`:''}<button class="btn ghost" data-a="close">Done</button>`;
+    else html=`<p class="sub">Due in <b class="tnum" style="color:var(--text)" data-t="hint">${fmt(S.t.hint)}</b>. You and Maya are together, so one photo covers you both. Theo is separated in sector 8 and sends his own.</p>
+      <div class="ex"><figure><img src="__GOOD__" alt="A storefront with its business sign clearly visible"><figcaption><b>Good</b>A real sign or storefront name</figcaption></figure>
+      <figure><img src="__BAD__" alt="A parking garage with no business signs"><figcaption><b>Not accepted</b>Garages, blank walls, edited logos</figcaption></figure></div>
+      <input type="file" id="cam" accept="image/*" capture="environment" hidden>
+      <div id="camOut"></div>
+      <button class="btn blue" id="camBtn">Open camera</button>`}
+  else if(k==='catch'){title='Report catch';
+    const names=['Ava','Maya','Theo','Sam','Lena','Noah','Iris','Ben','Kai'];
+    html=`<p class="sub">Pick who you tagged. They'll be asked to confirm. Disputes go to the host.</p><div class="cap">HIDERS</div><div class="list" role="radiogroup">`+
+      names.map(n=>`<button class="li" role="radio" aria-checked="${S.catchTarget===n}" data-n="${n}"><span class="av">${n[0]}</span><span class="tx"><span class="t1">${n}</span></span><span class="radio"></span></button>`).join('')+
+      `</div><button class="btn red" id="sendCatch" ${S.catchTarget?'':'disabled'}>Ask ${S.catchTarget||'them'} to confirm</button>`}
+  else if(k==='vote'){title='Sector vote';const open=S.state==='voting';
+    const cell=(n,w)=>{const c=closed.has(n),sel=S.voted===n||S.pick===n;return `<button class="cell${w?' w':''}" data-v="${n}" aria-pressed="${sel}" ${c||!open||S.voted?'disabled':''}>${n}${c?'<small>Closed</small>':n===closing?'<small>Closing</small>':''}</button>`};
+    html=`<p class="sub">${open?(S.voted?`You voted for sector ${S.voted}. Waiting on 0 seekers.`:`Voting closes in <b class="tnum" style="color:var(--text)" data-t="voteClose">${fmt(S.t.voteClose)}</b>. The sector with the most votes closes after a 3-minute warning.`):`Voting opens in <b class="tnum" style="color:var(--text)" data-t="voteIn">${fmt(S.t.voteIn)}</b>.`}</p>
+      <div class="grid">${[9,10,1,8,7,2].map(n=>cell(n)).join('')}${[6,3,5,4].map(n=>cell(n,1)).join('')}</div>
+      <p class="sub" style="font-size:12px">Laid out like the visitor guide: Independence Blvd at the top, Virginia Beach Blvd on the right.</p>
+      ${open&&!S.voted?`<button class="btn red" id="castVote" ${S.pick?'':'disabled'}>${S.pick?'Vote for sector '+S.pick:'Choose a sector'}</button>`:''}`}
+  else if(k==='group'){if(S.role==='hider'){title='Group B';
+    html=`<p class="sub">Locked when the match started. If any of you is in a closing sector, the whole group moves.</p><div class="list">
+      <div class="li"><span class="av">Y</span><span class="tx"><span class="t1">You</span><span class="t2">Sector 7 · GPS ±6 m</span></span><span class="chip ok">Together</span></div>
+      <div class="li"><span class="av">M</span><span class="tx"><span class="t1">Maya</span><span class="t2">Sector 7</span></span><span class="chip ok">Together</span></div>
+      <div class="li"><span class="av">T</span><span class="tx"><span class="t1">Theo</span><span class="t2">Sector 8 · sends his own photo</span></span><span class="chip warn">Separated</span></div></div>
+      <p class="sub" style="font-size:12px">Teammates appear on the map as an approximate area, never an exact point.</p>`}
+    else{title='Seekers';html=`<div class="list">
+      <div class="li"><span class="av s">Y</span><span class="tx"><span class="t1">You</span><span class="t2">Sector 3</span></span><span class="chip ok">Online</span></div>
+      <div class="li"><span class="av s">J</span><span class="tx"><span class="t1">Jordan</span><span class="t2">Caught at 7:42 PM · now seeking</span></span><span class="chip ok">Online</span></div>
+      <div class="li"><span class="av s">P</span><span class="tx"><span class="t1">Priya</span><span class="t2">Host · Sector 4</span></span><span class="chip warn">Weak GPS</span></div></div>
+      <div class="cap">CATCHES</div><div class="list"><div class="li"><span class="tx"><span class="t1">Jordan</span><span class="t2">Caught by Priya · Sector 2</span></span><span class="acc">Replay</span></div></div>`}}
+  else if(k==='events'){title='Events';
+    html=`<div class="ev"><time>7:51</time><div>Sector 4 selected<span>Closes at 7:54. Group B is clear.</span></div></div>
+      <div class="ev"><time>7:48</time><div>Photo hint approved<span>Group C · storefront sign, Sector 5</span></div></div>
+      <div class="ev"><time>7:42</time><div>Catch confirmed<span>Jordan is now a seeker</span></div></div>
+      <div class="ev"><time>7:41</time><div>Sector 1 closed<span>Chosen by seeker vote, 2 of 3</span></div></div>
+      <div class="ev"><time>7:30</time><div>Seekers released<span>Head start ended</span></div></div>`}
+  else if(k==='more'){title='More';
+    html=`<div class="list">${S.role==='seeker'?`<button class="li" data-go="events"><span class="tx"><span class="t1">Events</span></span><span class="acc">5</span></button>`:''}
+      <button class="li" data-go="safety"><span class="tx"><span class="t1">Safety rules</span></span></button>
+      <div class="li"><span class="tx"><span class="t1">Location</span><span class="t2">On · others see an approximate area</span></span></div></div>
+      <div class="cap">SETTINGS</div><div class="list">
+      <div class="li"><span class="tx"><span class="t1">Appearance</span></span><div class="seg" data-ctl="theme"><button data-v="system">System</button><button data-v="light">Light</button><button data-v="dark">Dark</button></div></div>
+      <div class="li"><span class="tx"><span class="t1">Announcements</span></span><button class="sw" role="switch" id="snd" aria-checked="${S.sound}" aria-label="Announcements"></button></div></div>
+      <div class="cap">PROTOTYPE</div><div class="list">
+      <div class="li"><span class="tx"><span class="t1">Role</span></span><div class="seg" data-ctl="role"><button data-v="hider">Hider</button><button data-v="seeker">Seeker</button></div></div>
+      <div class="li"><span class="tx"><span class="t1">State</span></span><div class="seg" data-ctl="state"><button data-v="live">Live</button><button data-v="voting">Vote</button><button data-v="paused">Pause</button></div></div>
+      <button class="li" data-a="note"><span class="tx"><span class="t1">Show a sample notification</span></span></button></div>
+      <div class="list"><button class="li danger" data-a="leave"><span class="tx"><span class="t1">Leave game</span></span></button></div>`}
+  else if(k==='safety'){title='Safety rules';
+    html=`<ul class="rules"><li>Stay in public areas that are open to visitors.</li><li>Keep out of parking garages and restricted spaces.</li><li>Walk. Never run into roads or traffic.</li><li>Be respectful of businesses and other visitors.</li><li>If anything feels unsafe, stop playing and tell the host.</li></ul><button class="btn ghost" data-go="more">Back</button>`}
+  else if(k==='leave'){title='Leave game?';html=`<p class="sub">You'll stop sharing location and drop out of the match. The host can let you back in.</p><button class="btn red" data-a="left">Leave game</button><div style="height:8px"></div><button class="btn ghost" data-go="more">Cancel</button>`}
+  $('#shTitle').textContent=title;body.innerHTML=html;setSheetOpen(true);syncSegs();wireSheet(k);$('#shClose').focus({preventScroll:true});
+}
+function wireSheet(k){
+  const body=$('#shBody');
+  body.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>openSheet(b.dataset.go));
+  body.querySelectorAll('[data-a]').forEach(b=>b.onclick=()=>{const a=b.dataset.a;if(a==='close')closeSheet();if(a==='note'){closeSheet();setTimeout(showNote,250)}
+    if(a==='leave')openSheet('leave');if(a==='left'){closeSheet();toast('Prototype: leaving is disabled here.')}});
+  wireSegs(body);
+  const snd=$('#snd');if(snd)snd.onclick=()=>{S.sound=!S.sound;snd.setAttribute('aria-checked',S.sound);save()};
+  if(k==='photo'){const cam=$('#cam'),btn=$('#camBtn');if(!btn)return;
+    btn.onclick=()=>{if(S.photoUrl&&btn.dataset.ready){S.photo='sent';closeSheet();tickUI();toast('Photo sent to the host for review');return}cam.click()};
+    cam.onchange=()=>{const f=cam.files&&cam.files[0];if(!f)return;S.photoUrl=URL.createObjectURL(f);
+      $('#camOut').innerHTML=`<img class="preview" src="${S.photoUrl}" alt="Your photo">`;btn.textContent='Send for review';btn.dataset.ready=1}}
+  if(k==='catch'){body.querySelectorAll('[data-n]').forEach(b=>b.onclick=()=>{S.catchTarget=b.dataset.n;openSheet('catch')});
+    const sc=$('#sendCatch');if(sc)sc.onclick=()=>{closeSheet();toast(`Sent. Waiting for ${S.catchTarget} to confirm.`);S.catchTarget=null}}
+  if(k==='vote'){body.querySelectorAll('.cell').forEach(c=>c.onclick=()=>{S.pick=+c.dataset.v;openSheet('vote')});
+    const cv=$('#castVote');if(cv)cv.onclick=()=>{S.voted=S.pick;S.pick=null;renderChrome();openSheet('vote')}}
+}
+// ---------- segmented controls (sheet + review panel) ----------
+function syncSegs(){document.querySelectorAll('.seg[data-ctl]').forEach(g=>g.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',S[g.dataset.ctl]===b.dataset.v)))}
+function wireSegs(root){root.querySelectorAll('.seg[data-ctl]').forEach(g=>g.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+  const k=g.dataset.ctl,v=b.dataset.v;S[k]=v;
+  if(k==='theme'){save();applyTheme()}
+  if(k==='role'){S.noteIx=0;renderChrome();fitTC();if(sheet.classList.contains('show'))openSheet('more')}
+  if(k==='state'){if(v==='voting'){S.t.voteClose=86;S.voted=null}renderChrome();if(sheet.classList.contains('show'))openSheet('more')}
+  syncSegs()}))}
+wireSegs(document.querySelector('.review'));
+$('#rvNote').onclick=showNote;
+
+// expose for screenshot automation
+window.mh={set:(k,v)=>{S[k]=v;if(k==='theme'){applyTheme()}else{renderChrome();fitTC()}},note:showNote};
+applyTheme();renderChrome();fitTC();
+setTimeout(showNote,900);
+})();
+</script>
